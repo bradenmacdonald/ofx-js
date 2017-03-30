@@ -1,4 +1,4 @@
-var xml2json = require('xml2json');
+const XmlParser = require('xml2js').Parser;
 
 function sgml2Xml(sgml) {
     return sgml
@@ -9,77 +9,55 @@ function sgml2Xml(sgml) {
         .replace(/<(\w+?)>([^<]+)/g, '<\$1>\$2</\$1>');
 }
 
-function parseXml(content) {
-    return JSON.parse(xml2json.toJson(content, { coerce: false }))
+/**
+ * Given an XML string, parse it and return it as a JSON-friendly Javascript object
+ * @param {string} xml The XML to parse
+ * @returns {Promise} A promise that will resolve to the parsed XML as a JSON-style object
+ */
+function parseXml(xml) {
+    const xmlParser = new XmlParser({explicitArray: false});
+    return new Promise((resolve, reject) => {
+        xmlParser.parseString(xml, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
 }
 
+/**
+ * Given a string of OFX data, parse it.
+ * @param {string} data The OFX data to parse
+ * @returns {Promise} A promise that will resolve to the parsed data.
+ */
 function parse(data) {
     // firstly, split into the header attributes and the footer sgml
-    var ofx = data.split('<OFX>', 2);
+    const ofx = data.split('<OFX>', 2);
 
     // firstly, parse the headers
-    var headerString = ofx[0].split(/\r?\n/);
-    var header = {};
-    headerString.forEach(function(attrs) {
-        var headAttr = attrs.split(/:/,2);
+    const headerString = ofx[0].split(/\r?\n/);
+    let header = {};
+    headerString.forEach(attrs => {
+        const headAttr = attrs.split(/:/,2);
         header[headAttr[0]] = headAttr[1];
     });
 
     // make the SGML and the XML
-    var content = '<OFX>' + ofx[1];
+    const content = '<OFX>' + ofx[1];
 
     // Parse the XML/SGML portion of the file into an object
     // Try as XML first, and if that fails do the SGML->XML mangling
-    var data = null;
-    try {
-        data = parseXml(content);
-    } catch (e) {
-        data = parseXml(sgml2Xml(content));
-    }
-
-    // put the headers into the returned data
-    data.header = header;
-
-    return data;
-}
-
-function serialize(header, body) {
-    var out = '';
-    // header order could matter
-    var headers = ['OFXHEADER', 'DATA', 'VERSION', 'SECURITY', 'ENCODING', 'CHARSET',
-        'COMPRESSION', 'OLDFILEUID', 'NEWFILEUID'];
-
-    headers.forEach(function(name) {
-        out += name + ':' + header[name] + '\n';
+    return parseXml(content).catch(() => {
+        // XML parse failed.
+        // Do the SGML->XML Manging and try again.
+        return parseXml(sgml2Xml(content));
+    }).then(data => {
+        // Put the headers into the returned data
+        data.header = header;
+        return data;
     });
-    out += '\n';
-
-    out += objToOfx({ OFX: body });
-    return out;
-}
-
-var objToOfx = function(obj) {
-  var out = '';
-
-  Object.keys(obj).forEach(function(name) {
-    var item = obj[name];
-    var start = '<' + name + '>';
-    var end = '</' + name + '>';
-
-    if (item instanceof Object) {
-        if (item instanceof Array) {
-            item.forEach(function(it) {
-                out += start + '\n' + objToOfx(it) + end + '\n';
-            });
-            return;
-        }
-        return out += start + '\n' + objToOfx(item) + end + '\n';
-    }
-    out += start + item + '\n';
-  });
-
-  return out;
 }
 
 module.exports.parse = parse;
-module.exports.serialize = serialize;

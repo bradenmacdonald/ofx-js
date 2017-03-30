@@ -1,14 +1,13 @@
 {
-  "name": "ofx",
-  "description": "Parse OFX files into a usable data structure.",
-  "version": "0.4.0",
-  "author": {
-    "name": "Andrew Chilton",
-    "email": "andychilton@gmail.com",
-    "url": "https://chilts.org/"
-  },
-  "homepage": "https://github.com/chilts/node-ofx",
+  "name": "ofx-js",
+  "description": "Parse OFX files using pure JavaScript.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/bradenmacdonald/ofx-js",
   "contributors": [
+    {
+      "name": "Braden MacDonald",
+      "url": "http://bradenmacdonald.com/"
+    },
     {
       "name": "Christian Sullivan",
       "url": "http://euforic.co/"
@@ -22,20 +21,13 @@
     "tape": "^4.6.3"
   },
   "dependencies": {
-    "xml2json": "^0.10.0"
+    "xml2js": "^0.4.17"
   },
   "main": "./ofx.js",
   "directories": {},
-  "engines": {
-    "node": ">= 0.6.0"
-  },
   "repository": {
     "type": "git",
-    "url": "git://github.com/chilts/node-ofx.git"
-  },
-  "bugs": {
-    "url": "http://github.com/chilts/node-ofx/issues",
-    "mail": "chilts@appsattic.com"
+    "url": "git://github.com/bradenmacdonald/ofx-js.git"
   },
   "license": "MIT",
   "keywords": [

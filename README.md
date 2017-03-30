@@ -1,98 +1,38 @@
-```
- _______  _______          
-(  ___  )(  ____ \|\     /|
-| (   ) || (    \/( \   / )
-| |   | || (__     \ (_) / 
-| |   | ||  __)     ) _ (  
-| |   | || (       / ( ) \ 
-| (___) || )      ( /   \ )
-(_______)|/       |/     \|
-                           
-```
+# OFX JS
+Parse Open Financial Exchange (OFX) files into a usable data structure.
 
-Parse Open Financial Exchange (OFX) files into a usable data structure. Serialize objects into OFX file format.
+For details on the OFX file format, download the latest specification from
+http://www.ofx.org/downloads.html
 
-# parsing #
+# Goals
 
-```js
-var ofx = require('ofx');
+* Work in the browser (no native code dependencies)
+* Have as small a footprint as possible (minimize dependencies)
+  - Currently, `xml2js` is the only dependency and it may be removed in the future.
+* Parse only, no serialization
+* Make no attempt to support pre-ES6 runtimes
 
-fs.readFile('Account-1234-5678.ofx', 'utf8', function(err, ofxData) {
-    if (err) throw err;
+# History
 
-    var data = ofx.parse(ofxData);
-    console.dir(data);
+This is based on [node-ofx](https://github.com/chilts/node-ofx), modified to
+be a pure-JavaScript implementation (so it works in the browser as well as in
+node.js) and to offer a promise-based API. Due to different goals and a different
+XML parser being used, it is not API-compatible and is probably slower.
+
+# Usage
+
+Example usage:
+
+```javascript
+import {parse as parseOFX} from 'ofx-js';
+
+const ofxString = readFile("bank-statement.ofx");
+
+parseOFX(ofxString).then(ofxData => {
+    const statementResponse = ofxData.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS;
+    const accountId = statementResponse.BANKACCTFROM.ACCTID;
+    const currencyCode = currencyCode = statementResponse.CURDEF;
+    const transactionStatement = statementResponse.BANKTRANLIST.STMTTRN;
+    // do something...
 });
 ```
-
-# serializing #
-
-```js
-var ofx = require('ofx');
-
-var header = {
-    OFXHEADER: '100',
-    DATA: 'OFXSGML',
-    VERSION: '103',
-    SECURITY: 'NONE',
-    ENCODING: 'USASCII',
-    CHARSET: '1252',
-    COMPRESSION: 'NONE',
-    OLDFILEUID: 'NONE',
-    NEWFILEUID: 'unique id here'
-};
-
-var body = {
-    SIGNONMSGSRQV1: {
-      SONRQ: {
-        DTCLIENT: 'value',
-        USERID: 'user id',
-        USERPASS: 'password',
-        LANGUAGE: 'ENG',
-        FI: {
-          ORG: 'org',
-          FID: 'fid'
-        },
-        APPID: 'QWIN',
-        APPVER: '2100',
-        CLIENTUID: 'needed by some places'
-      }
-    }
-};
-
-var ofx_string = ofx.serialize(header, body);
-console.log(ofx_string);
-```
-
-# Data #
-
-In your data returned, you will have the following properties:
-
-* OFX - a dump of the XML parsing as a js object
-* header - just the 'key:values' pairs from the top of the OFX file
-
-# caveats #
-
-This file format is yucky, horrible and just silly. This module helps parse the ones I know about. And it doesn't do it in a nice way either. It may or may not work for your own use - only by trying it will you find out.
-
-If you discover a broken file, please submit an issue with the sample file.
-
-This module takes the OFX format and does the following:
-
-* splits off the initial set of metadata (the "Key:Value" lines)
-* tries to mechnically turn the SGML into a valid XML format
-* turns the XML into a JavaScript data structure
-
-# Credits #
-
-Thanks to [Christian Sullivan](https://github.com/euforic) for writing
-[banking.js](https://github.com/euforic/banking.js), upon which some of this code is based. Many thanks for letting me
-use it.
-
-# Author #
-
-Written by [Andrew Chilton](https://chilts.org/) - [@andychilton](https://twitter.com/andychilton).
-
-# License #
-
-The MIT License : http://appsattic.mit-license.org/2012/
