@@ -1,4 +1,4 @@
-const XmlParser = require('xml2js').Parser;
+const XmlParser = require('xml2js/lib/parser').Parser;
 
 function sgml2Xml(sgml) {
     return sgml
