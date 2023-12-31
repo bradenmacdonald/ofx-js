@@ -23,6 +23,25 @@ test('parse', t => {
     });
 });
 
+test('parse 2', t => {
+    const file = fs.readFileSync(__dirname + '/data/example2.ofx', 'utf8');
+    ofx.parse(file).then(data => {
+        // headers
+        t.equal(data.header.OFXHEADER, '100');
+        t.equal(data.header.ENCODING, 'USASCII');
+
+        var transactions = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
+        t.equal(transactions.length, 29);
+        t.equal(transactions[0].TRNAMT, "-45.54");
+
+        var status = data.OFX.SIGNONMSGSRSV1.SONRS.STATUS;
+        t.equal(status.CODE, '0');
+        t.equal(status.SEVERITY, 'INFO');
+
+        t.end();
+    });
+});
+
 test('parse XML', t => {
     const file = fs.readFileSync(__dirname + '/data/example-xml.qfx', 'utf8');
     ofx.parse(file).then(data => {
