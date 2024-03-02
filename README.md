@@ -1,8 +1,12 @@
 # OFX JS
+
 Parse Open Financial Exchange (OFX) files into a usable data structure.
 
 For details on the OFX file format, download the latest specification from
 http://www.ofx.org/downloads.html
+
+[![NPM Version](https://img.shields.io/npm/v/ofx-js)](https://www.npmjs.com/package/ofx-js)
+![NPM Downloads](https://img.shields.io/npm/dm/ofx-js)
 
 # Goals
 
@@ -20,6 +24,12 @@ node.js) and to offer a promise-based API. Due to different goals and a differen
 XML parser being used, it is not API-compatible and is probably slower.
 
 # Usage
+
+Installation:
+
+```sh
+npm install ofx-js
+```
 
 Example usage:
 
