@@ -41,7 +41,7 @@ const ofxString = readFile("bank-statement.ofx");
 parseOFX(ofxString).then(ofxData => {
     const statementResponse = ofxData.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS;
     const accountId = statementResponse.BANKACCTFROM.ACCTID;
-    const currencyCode = currencyCode = statementResponse.CURDEF;
+    const currencyCode = statementResponse.CURDEF;
     const transactionStatement = statementResponse.BANKTRANLIST.STMTTRN;
     // do something...
 });
