@@ -12,7 +12,6 @@ http://www.ofx.org/downloads.html
 
 * Work in the browser (no native code dependencies)
 * Have as small a footprint as possible (minimize dependencies)
-  - Currently, `xml2js` is the only dependency and it may be removed in the future.
 * Parse only, no serialization
 * Make no attempt to support pre-ES6 runtimes
 
