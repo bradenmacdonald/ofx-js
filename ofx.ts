@@ -1,4 +1,4 @@
-import type { ParsedOFX } from './ofx-types.ts';
+import type { ParsedOFX } from './ofx-types.d.ts';
 
 function sgml2Xml(sgml: string): string {
     return sgml
