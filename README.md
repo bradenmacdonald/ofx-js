@@ -3,7 +3,7 @@
 Parse Open Financial Exchange (OFX) files into a usable data structure.
 
 For details on the OFX file format, download the latest specification from
-http://www.ofx.org/downloads.html
+https://financialdataexchange.org/about-fdx/ofx-work-group/
 
 [![NPM Version](https://img.shields.io/npm/v/ofx-js)](https://www.npmjs.com/package/ofx-js)
 ![NPM Downloads](https://img.shields.io/npm/dm/ofx-js)
