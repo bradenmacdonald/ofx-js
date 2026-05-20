@@ -47,6 +47,6 @@
     "build": "tsc",
     "prepare": "tsc",
     "test": "node --test test/*.ts",
-    "types": "tsc --noEmit && tsc --ignoreConfig --noEmit --types node ofx.ts test/*.ts"
+    "types": "tsc --noEmit && tsc --project test"
   }
 }

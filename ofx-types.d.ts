@@ -1172,6 +1172,11 @@ export interface SignonResponse {
   ACCESSKEY?: string;
   /** Extension data */
   OFXEXTENSION?: OFXExtension;
+  /**
+   * Intuit Business Identifier - not part of OFX spec but commonly found in "Quicken" QFX data files which are OFX + this field
+   * This is an alternative way of identifying the Financial Institution that produced the QFX file.
+   */
+  INTUBID?: string;
 }
 
 /**
