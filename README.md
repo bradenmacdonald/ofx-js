@@ -1,6 +1,6 @@
 # OFX JS
 
-Parse Open Financial Exchange (OFX) files into a usable data structure.
+Parse Open Financial Exchange (OFX) files into a usable data structure. Also supports Quicken/QFX files.
 
 ✨ Now includes fairly comprehensive TypeScript types and documentation of the
 various OLX data fields in the parsed data structure.
