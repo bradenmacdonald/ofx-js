@@ -1,3 +1,4 @@
+import type { ParsedOFX } from './ofx-types.ts';
 
 function sgml2Xml(sgml: string): string {
     return sgml
@@ -146,7 +147,7 @@ function parseXml(xml: string): Record<string, any> {
     return { [ast.name]: convertAstToObject(ast) ?? '' };
 }
 
-export interface ParsedOFX {
+export interface LooselyTypedOFX {
     header: Record<string, string>;
     OFX: Record<string, any>;
 }
@@ -154,7 +155,7 @@ export interface ParsedOFX {
 /**
  * Given a string of OFX data, parse it.
  */
-export function parseSync(data: string): ParsedOFX {
+export function parseSync(data: string): LooselyTypedOFX {
     // firstly, split into the header attributes and the footer sgml
     const ofx = data.split('<OFX>', 2);
 
@@ -183,6 +184,16 @@ export function parseSync(data: string): ParsedOFX {
  * Given a string of OFX data, parse it asynchronously.
  * This function is only here for backward-compatibility purposes; it is not actually async.
  */
-export async function parse(data: string): Promise<ParsedOFX> {
+export async function parse(data: string): Promise<LooselyTypedOFX> {
     return parseSync(data);
+}
+
+/**
+ * Given a string of OFX data, parse it.
+ * 
+ * This parser is not any more strict than the normal `parseOFX`,
+ * but the TypeScript types of the returned data are much more strict.
+ */
+export function parseStrict(data: string): ParsedOFX {
+    return parseSync(data) as ParsedOFX;
 }

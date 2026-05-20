@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseSync as parse } from '../ofx.js';
+import { parseStrict as parse } from '../ofx.js';
 
 test('parse example1', async () => {
     const file = readFileSync(new URL('data/example1.ofx', import.meta.url), 'utf8');
@@ -17,11 +17,18 @@ test('parse example1', async () => {
     assert.equal(data.header.COMPRESSION, 'NONE');
     assert.equal(data.header.OLDFILEUID, 'NONE');
     assert.equal(data.header.NEWFILEUID, 'NONE');
+
+    // Check for statement transaction response
+    const statmentResponseMeta = data.OFX.BANKMSGSRSV1?.STMTTRNRS;
+    if (!statmentResponseMeta || Array.isArray(statmentResponseMeta)) {
+        throw Error("Expected single STMTTRNRS");
+    }
+    const statementResponse = statmentResponseMeta.STMTRS!;
     
     // Check account info:
-    const currency = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.CURDEF;
+    const currency = statementResponse.CURDEF;
     assert.equal(currency, 'NZD');
-    const accountInfo = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKACCTFROM;
+    const accountInfo = statementResponse.BANKACCTFROM;
     assert.deepEqual(accountInfo, {
         ACCTID: '1234567-00',
         ACCTTYPE: 'SAVINGS',
@@ -30,20 +37,23 @@ test('parse example1', async () => {
     });
 
     // Check transaction list dates:
-    const startDate = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.DTSTART;
+    const startDate = statementResponse.BANKTRANLIST?.DTSTART;
     assert.equal(startDate, '20120101');
-    const endDate = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.DTEND;
+    const endDate = statementResponse.BANKTRANLIST?.DTEND;
     assert.equal(endDate, '20121003');
 
     // Check ledger balance:
-    const ledgerBalance = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.LEDGERBAL;
+    const ledgerBalance = statementResponse.LEDGERBAL;
     assert.deepEqual(ledgerBalance, {
         BALAMT: '4225.79',
         DTASOF: '20121004',
     });
 
     // Check transactions:
-    const transactions = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
+    const transactions = statementResponse.BANKTRANLIST?.STMTTRN;
+    if (!Array.isArray(transactions)) {
+        throw new Error('Expected multiple transactions.');
+    }
     assert.equal(transactions.length, 5);
     assert.deepEqual(transactions[0], {
         DTPOSTED: '20120928',
@@ -81,7 +91,17 @@ test('parse example2', async () => {
     assert.equal(data.header.OFXHEADER, '100');
     assert.equal(data.header.ENCODING, 'USASCII');
 
-    const transactions = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
+    // Check for statement transaction response
+    const statmentResponseMeta = data.OFX.BANKMSGSRSV1?.STMTTRNRS;
+    if (!statmentResponseMeta || Array.isArray(statmentResponseMeta)) {
+        throw Error("Expected single STMTTRNRS");
+    }
+    const statementResponse = statmentResponseMeta.STMTRS!;
+
+    const transactions = statementResponse.BANKTRANLIST?.STMTTRN;
+    if (!Array.isArray(transactions)) {
+        throw new Error('Expected multiple transactions.');
+    }
     assert.equal(transactions.length, 29);
     assert.deepEqual(transactions[0], {
         CHECKNUM: '*****',
@@ -105,7 +125,14 @@ test('parse XML', async () => {
     assert.equal(data.header.OFXHEADER, '100');
     assert.equal(data.header.ENCODING, 'USASCII');
 
-    const transaction = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
+    // Check for statement transaction response
+    const statmentResponseMeta = data.OFX.BANKMSGSRSV1?.STMTTRNRS;
+    if (!statmentResponseMeta || Array.isArray(statmentResponseMeta)) {
+        throw Error("Expected single STMTTRNRS");
+    }
+    const statementResponse = statmentResponseMeta.STMTRS!;
+
+    const transaction = statementResponse.BANKTRANLIST?.STMTTRN;
     assert.deepEqual(transaction, {
         TRNTYPE: 'INT',
         DTPOSTED: '20161215000550',

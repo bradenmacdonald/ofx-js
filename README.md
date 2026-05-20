@@ -2,6 +2,9 @@
 
 Parse Open Financial Exchange (OFX) files into a usable data structure.
 
+✨ Now includes fairly comprehensive TypeScript types and documentation of the
+various OLX data fields in the parsed data structure.
+
 For details on the OFX file format, download the latest specification from
 https://financialdataexchange.org/about-fdx/ofx-work-group/
 
@@ -10,17 +13,14 @@ https://financialdataexchange.org/about-fdx/ofx-work-group/
 
 # Goals
 
-* Work in the browser (no native code dependencies)
-* Have as small a footprint as possible (minimize dependencies)
+* Work in any JS environment (no dependencies at all)
+* Have as small a footprint as possible
 * Parse only, no serialization
-* Make no attempt to support pre-ES6 runtimes
+* Full TypeScript types (opt-in using `parseStrict` instead of `parseSync`)
 
 # History
 
-This is based on [node-ofx](https://github.com/chilts/node-ofx), modified to
-be a pure-JavaScript implementation (so it works in the browser as well as in
-node.js) and to offer a promise-based API. Due to different goals and a different
-XML parser being used, it is not API-compatible and is probably slower.
+This was originally based on [node-ofx](https://github.com/chilts/node-ofx), but has since been modified extensively.
 
 # Usage
 
@@ -32,16 +32,26 @@ npm install ofx-js
 
 Example usage:
 
-```javascript
-import {parseSync as parseOFX} from 'ofx-js';
+```typescript
+import { parseStrict as parseOFX } from 'ofx-js';
 
 const ofxString = readFile("bank-statement.ofx");
 
 const ofxData = parseOFX(ofxString);
 
+// Check that this file includes the expected response data:
+if (!ofxData.OFX.BANKMSGSRSV1?.STMTTRNRS || Array.isArray(ofxData.OFX.BANKMSGSRSV1.STMTTRNRS)) {
+    throw Error('Expected a single statement transaction response.');
+}
+
 const statementResponse = ofxData.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS;
+if (!statementResponse) {
+    throw Error('Missing statement response payload.');
+}
+
 const accountId = statementResponse.BANKACCTFROM.ACCTID;
 const currencyCode = statementResponse.CURDEF;
-const transactionStatement = statementResponse.BANKTRANLIST.STMTTRN;
+// Bank account transactions: may be an array of transactions, a single transaction, or undefined.
+const transactionStatement = statementResponse.BANKTRANLIST?.STMTTRN;
 // do something...
 ```

@@ -17,6 +17,12 @@
       "url": "https://webb.codes"
     }
   ],
+  "files": [
+    "ofx.js",
+    "ofx.ts",
+    "ofx.d.ts",
+    "ofx-types.d.ts"
+  ],
   "type": "module",
   "devDependencies": {
     "@types/node": "^25.9.1",

@@ -1,4 +1,5 @@
 node_modules/*
+spec-*/
 *~
 ofx.js
 ofx.d.ts
