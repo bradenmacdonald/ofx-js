@@ -33,15 +33,15 @@ npm install ofx-js
 Example usage:
 
 ```javascript
-import {parse as parseOFX} from 'ofx-js';
+import {parseSync as parseOFX} from 'ofx-js';
 
 const ofxString = readFile("bank-statement.ofx");
 
-parseOFX(ofxString).then(ofxData => {
-    const statementResponse = ofxData.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS;
-    const accountId = statementResponse.BANKACCTFROM.ACCTID;
-    const currencyCode = statementResponse.CURDEF;
-    const transactionStatement = statementResponse.BANKTRANLIST.STMTTRN;
-    // do something...
-});
+const ofxData = parseOFX(ofxString);
+
+const statementResponse = ofxData.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS;
+const accountId = statementResponse.BANKACCTFROM.ACCTID;
+const currencyCode = statementResponse.CURDEF;
+const transactionStatement = statementResponse.BANKTRANLIST.STMTTRN;
+// do something...
 ```

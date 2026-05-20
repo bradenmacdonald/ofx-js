@@ -150,20 +150,13 @@ function convertAstToObject(astNode) {
  * @returns {Promise} A promise that will resolve to the parsed XML as a JSON-style object
  */
 function parseXml(xml) {
-    return new Promise((resolve, reject) => {
-        try {
-            const ast = parseXmlString(xml);
-            if (!ast) {
-                reject(new Error("Failed to parse XML"));
-                return;
-            }
-            const result = {};
-            result[ast.name] = convertAstToObject(ast);
-            resolve(result);
-        } catch (err) {
-            reject(err);
-        }
-    });
+    const ast = parseXmlString(xml);
+    if (!ast) {
+        throw new Error("Failed to parse XML");
+    }
+    const result = {};
+    result[ast.name] = convertAstToObject(ast);
+    return result;
 }
 
 /**
@@ -171,7 +164,7 @@ function parseXml(xml) {
  * @param {string} data The OFX data to parse
  * @returns {Promise} A promise that will resolve to the parsed data.
  */
-function parse(data) {
+function parseSync(data) {
     // firstly, split into the header attributes and the footer sgml
     const ofx = data.split('<OFX>', 2);
 
@@ -188,15 +181,25 @@ function parse(data) {
 
     // Parse the XML/SGML portion of the file into an object
     // Try as XML first, and if that fails do the SGML->XML mangling
-    return parseXml(content).catch(() => {
-        // XML parse failed.
-        // Do the SGML->XML Manging and try again.
-        return parseXml(sgml2Xml(content));
-    }).then(data => {
-        // Put the headers into the returned data
-        data.header = header;
-        return data;
-    });
+    let result;
+    try {
+        result = parseXml(content);
+    } catch (err) {
+        result = parseXml(sgml2Xml(content));
+    }
+    result.header = header;
+    return result;
+}
+
+/**
+ * Given a string of OFX data, parse it asynchronously.
+ * This function is only here for backward-compatibility purposes.
+ * @param {string} data The OFX data to parse
+ * @returns {Promise} A promise that will resolve to the parsed data.
+ */
+async function parse(data) {
+    return parseSync(data);
 }
 
 module.exports.parse = parse;
+module.exports.parseSync = parseSync;
