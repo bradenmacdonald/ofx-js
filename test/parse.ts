@@ -9,9 +9,9 @@ function assertDeepEqual<X>(a: X, b: X) {
 }
 
 
-test('parse example1', async () => {
+test('parse example1', () => {
     const file = readFileSync(new URL('data/example1.ofx', import.meta.url), 'utf8');
-    const data = await parse(file);
+    const data = parse(file);
 
     // Check header:
     assert.equal(data.header.OFXHEADER, '100');
@@ -90,9 +90,9 @@ test('parse example1', async () => {
     assert.equal(status.SEVERITY, 'INFO');
 });
 
-test('parse example2', async () => {
+test('parse example2', () => {
     const file = readFileSync(new URL('data/example2.ofx', import.meta.url), 'utf8');
-    const data = await parse(file);
+    const data = parse(file);
 
     assert.equal(data.header.OFXHEADER, '100');
     assert.equal(data.header.ENCODING, 'USASCII');
@@ -124,9 +124,9 @@ test('parse example2', async () => {
     assert.equal(status.SEVERITY, 'INFO');
 });
 
-test('parse XML', async () => {
+test('parse XML', () => {
     const file = readFileSync(new URL('data/example-xml.qfx', import.meta.url), 'utf8');
-    const data = await parse(file);
+    const data = parse(file);
 
     assert.equal(data.header.OFXHEADER, '100');
     assert.equal(data.header.ENCODING, 'USASCII');
@@ -152,9 +152,9 @@ test('parse XML', async () => {
     assert.equal(status.SEVERITY, 'INFO');
 });
 
-test('parse credit-card.qfx', async () => {
+test('parse credit-card.qfx', () => {
     const file = readFileSync(new URL('data/credit-card.qfx', import.meta.url), 'utf8');
-    const data = await parse(file);
+    const data = parse(file);
 
     // Check header:
     assert.equal(data.header.OFXHEADER, '100');
