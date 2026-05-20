@@ -1,5 +1,5 @@
 
-function sgml2Xml(sgml) {
+function sgml2Xml(sgml: string): string {
     return sgml
         .replace(/>\s+</g, '><')    // remove whitespace inbetween tag close/open
         .replace(/\s+</g, '<')      // remove whitespace before a close tag
@@ -9,22 +9,26 @@ function sgml2Xml(sgml) {
         .replace(/<(\w+?)>([^<]+)/g, '<\$1>\$2</\$1>'); // Add closing tag wherever they seem to be missing: <FOO>bar becomes <FOO>bar</FOO>
 }
 
+interface AstNode {
+    name: string;
+    attributes: Record<string, string>;
+    children: AstNode[];
+    content?: string;
+}
+
 /**
  * Parses an XML string into a basic Abstract Syntax Tree (AST).
  * Includes strict validation for matching opening and closing tags.
- * 
- * @param {string} xml - The XML string to parse.
- * @returns {Object|undefined} The root node of the AST.
  */
-function parseXmlString(xml) {
+function parseXmlString(xml: string): AstNode | undefined {
     xml = xml.trim();
 
     // strip comments
     xml = xml.replace(/<!--[\s\S]*?-->/g, "");
 
-    function document() {
+    function document(): AstNode | undefined {
         // Ignore declaration like <?xml ... ?>
-        let m = match(/^<\?xml\s*/);
+        const m = match(/^<\?xml\s*/);
         if (m) {
             while (!(eos() || is("?>"))) {
                 attribute();
@@ -35,11 +39,10 @@ function parseXmlString(xml) {
         return tag();
     }
 
-    function tag() {
+    function tag(): AstNode | undefined {
         const m = match(/^<([\w-:.]+)\s*/);
-        if (!m) return;
-
-        const node = {
+        if (!m) return undefined;
+        const node: AstNode = {
             name: m[1],
             attributes: {},
             children: [],
@@ -77,40 +80,34 @@ function parseXmlString(xml) {
         return node;
     }
 
-    function content() {
+    function content(): string {
         const m = match(/^([^<]*)/);
-        if (m) return entities(m[1]);
-        return "";
+        return m ? entities(m[1]) : "";
     }
 
-    function attribute() {
+    function attribute(): { name: string; value: string } | undefined {
         const m = match(/([\w:-]+)\s*=\s*("[^"]*"|'[^']*'|\w+)\s*/);
-        if (!m) return;
+        if (!m) return undefined;
         return { name: m[1], value: entities(strip(m[2])) };
     }
 
-    function strip(val) {
+    function strip(val: string): string {
         return val.replace(/^['"]|['"]$/g, "");
     }
 
-    function entities(val) {
+    function entities(val: string): string {
         return val.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
     }
 
-    function match(re) {
+    function match(re: RegExp): RegExpMatchArray | undefined {
         const m = xml.match(re);
-        if (!m) return;
+        if (!m) return undefined;
         xml = xml.slice(m[0].length);
         return m;
     }
 
-    function eos() {
-        return xml.length === 0;
-    }
-
-    function is(prefix) {
-        return xml.startsWith(prefix);
-    }
+    function eos(): boolean { return xml.length === 0; }
+    function is(prefix: string): boolean { return xml.startsWith(prefix); }
 
     return document();
 }
@@ -118,25 +115,21 @@ function parseXmlString(xml) {
 /**
  * Converts an XML AST node into a JSON-friendly Javascript object.
  * Replicates the behavior of xml2js with explicitArray: false.
- * 
- * @param {Object} astNode - The AST node to convert.
- * @returns {Object|string|undefined} The mapped JSON representation.
  */
-function convertAstToObject(astNode) {
+function convertAstToObject(astNode: AstNode | undefined): Record<string, any> | string | undefined {
     if (!astNode) return undefined;
-
-    if (astNode.children.length === 0) {
-        return astNode.content || '';
-    }
-
-    const obj = {};
+    if (astNode.children.length === 0) return astNode.content ?? '';
+    const obj: Record<string, any> = {};
     for (const child of astNode.children) {
         const childVal = convertAstToObject(child);
-        if (obj[child.name] !== undefined) {
-            if (!Array.isArray(obj[child.name])) {
-                obj[child.name] = [obj[child.name]];
+        if (childVal === undefined) continue;
+        const existing = obj[child.name];
+        if (existing !== undefined) {
+            if (Array.isArray(existing)) {
+                existing.push(childVal);
+            } else {
+                obj[child.name] = [existing, childVal];
             }
-            obj[child.name].push(childVal);
         } else {
             obj[child.name] = childVal;
         }
@@ -146,59 +139,50 @@ function convertAstToObject(astNode) {
 
 /**
  * Given an XML string, parse it and return it as a JSON-friendly Javascript object
- * @param {string} xml The XML to parse
- * @returns {Promise} A promise that will resolve to the parsed XML as a JSON-style object
  */
-function parseXml(xml) {
+function parseXml(xml: string): Record<string, any> {
     const ast = parseXmlString(xml);
-    if (!ast) {
-        throw new Error("Failed to parse XML");
-    }
-    const result = {};
-    result[ast.name] = convertAstToObject(ast);
-    return result;
+    if (!ast) throw new Error("Failed to parse XML");
+    return { [ast.name]: convertAstToObject(ast) ?? '' };
+}
+
+export interface ParsedOFX {
+    header: Record<string, string>;
+    OFX: Record<string, any>;
 }
 
 /**
  * Given a string of OFX data, parse it.
- * @param {string} data The OFX data to parse
- * @returns {Promise} A promise that will resolve to the parsed data.
  */
-function parseSync(data) {
+export function parseSync(data: string): ParsedOFX {
     // firstly, split into the header attributes and the footer sgml
     const ofx = data.split('<OFX>', 2);
 
-    // firstly, parse the headers
-    const headerString = ofx[0].split(/\r?\n/);
-    let header = {};
-    headerString.forEach(attrs => {
-        const headAttr = attrs.split(/:/, 2);
-        header[headAttr[0]] = headAttr[1];
-    });
+    // parse the headers
+    const header: Record<string, string> = {};
+    for (const line of ofx[0].split(/\r?\n/)) {
+        const parts = line.split(':', 2);
+        if (parts.length === 2) header[parts[0]] = parts[1];
+    }
 
     // make the SGML and the XML
     const content = '<OFX>' + ofx[1];
 
     // Parse the XML/SGML portion of the file into an object
     // Try as XML first, and if that fails do the SGML->XML mangling
-    let result;
+    let result: Record<string, any>;
     try {
         result = parseXml(content);
-    } catch (err) {
+    } catch {
         result = parseXml(sgml2Xml(content));
     }
-    result.header = header;
-    return result;
+    return { header, OFX: result['OFX'] };
 }
 
 /**
  * Given a string of OFX data, parse it asynchronously.
- * This function is only here for backward-compatibility purposes.
- * @param {string} data The OFX data to parse
- * @returns {Promise} A promise that will resolve to the parsed data.
+ * This function is only here for backward-compatibility purposes; it is not actually async.
  */
-async function parse(data) {
+export async function parse(data: string): Promise<ParsedOFX> {
     return parseSync(data);
 }
-
-export { parse, parseSync };

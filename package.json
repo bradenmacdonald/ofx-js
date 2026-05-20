@@ -18,9 +18,12 @@
     }
   ],
   "type": "module",
-  "devDependencies": {},
-  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3"
+  },
   "main": "./ofx.js",
+  "types": "./ofx.d.ts",
   "directories": {},
   "repository": {
     "type": "git",
@@ -35,6 +38,9 @@
     "export"
   ],
   "scripts": {
-    "test": "node --test test/*.js"
+    "build": "tsc",
+    "prepare": "tsc",
+    "test": "node --test test/*.ts",
+    "types": "tsc --noEmit && tsc --ignoreConfig --noEmit --types node ofx.ts test/*.ts"
   }
 }

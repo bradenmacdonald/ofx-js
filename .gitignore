@@ -1,2 +1,4 @@
 node_modules/*
 *~
+ofx.js
+ofx.d.ts
