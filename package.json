@@ -17,6 +17,7 @@
       "url": "https://webb.codes"
     }
   ],
+  "type": "module",
   "devDependencies": {},
   "dependencies": {},
   "main": "./ofx.js",

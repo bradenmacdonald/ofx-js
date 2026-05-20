@@ -1,12 +1,11 @@
-const fs = require('fs');
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-
-const ofx = require('..');
+import { readFileSync } from 'fs';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { parse } from '../ofx.js';
 
 test('parse example1', async () => {
-    const file = fs.readFileSync(__dirname + '/data/example1.ofx', 'utf8');
-    const data = await ofx.parse(file);
+    const file = readFileSync(new URL('data/example1.ofx', import.meta.url), 'utf8');
+    const data = await parse(file);
 
     assert.equal(data.header.OFXHEADER, '100');
     assert.equal(data.header.ENCODING, 'USASCII');
@@ -20,8 +19,8 @@ test('parse example1', async () => {
 });
 
 test('parse example2', async () => {
-    const file = fs.readFileSync(__dirname + '/data/example2.ofx', 'utf8');
-    const data = await ofx.parse(file);
+    const file = readFileSync(new URL('data/example2.ofx', import.meta.url), 'utf8');
+    const data = await parse(file);
 
     assert.equal(data.header.OFXHEADER, '100');
     assert.equal(data.header.ENCODING, 'USASCII');
@@ -36,8 +35,8 @@ test('parse example2', async () => {
 });
 
 test('parse XML', async () => {
-    const file = fs.readFileSync(__dirname + '/data/example-xml.qfx', 'utf8');
-    const data = await ofx.parse(file);
+    const file = readFileSync(new URL('data/example-xml.qfx', import.meta.url), 'utf8');
+    const data = await parse(file);
 
     assert.equal(data.header.OFXHEADER, '100');
     assert.equal(data.header.ENCODING, 'USASCII');

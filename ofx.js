@@ -201,5 +201,4 @@ async function parse(data) {
     return parseSync(data);
 }
 
-module.exports.parse = parse;
-module.exports.parseSync = parseSync;
+export { parse, parseSync };
