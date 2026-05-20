@@ -1,67 +1,57 @@
-// core
-var fs = require('fs');
-var test = require('tape');
+const fs = require('fs');
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
 
-// local
-var ofx = require('..');
+const ofx = require('..');
 
-test('parse', t => {
+test('parse example1', async () => {
     const file = fs.readFileSync(__dirname + '/data/example1.ofx', 'utf8');
-    ofx.parse(file).then(data => {
-        // headers
-        t.equal(data.header.OFXHEADER, '100');
-        t.equal(data.header.ENCODING, 'USASCII');
+    const data = await ofx.parse(file);
 
-        var transactions = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
-        t.equal(transactions.length, 5);
+    assert.equal(data.header.OFXHEADER, '100');
+    assert.equal(data.header.ENCODING, 'USASCII');
 
-        var status = data.OFX.SIGNONMSGSRSV1.SONRS.STATUS;
-        t.equal(status.CODE, '0');
-        t.equal(status.SEVERITY, 'INFO');
+    const transactions = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
+    assert.equal(transactions.length, 5);
 
-        t.end();
-    });
+    const status = data.OFX.SIGNONMSGSRSV1.SONRS.STATUS;
+    assert.equal(status.CODE, '0');
+    assert.equal(status.SEVERITY, 'INFO');
 });
 
-test('parse 2', t => {
+test('parse example2', async () => {
     const file = fs.readFileSync(__dirname + '/data/example2.ofx', 'utf8');
-    ofx.parse(file).then(data => {
-        // headers
-        t.equal(data.header.OFXHEADER, '100');
-        t.equal(data.header.ENCODING, 'USASCII');
+    const data = await ofx.parse(file);
 
-        var transactions = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
-        t.equal(transactions.length, 29);
-        t.equal(transactions[0].TRNAMT, "-45.54");
+    assert.equal(data.header.OFXHEADER, '100');
+    assert.equal(data.header.ENCODING, 'USASCII');
 
-        var status = data.OFX.SIGNONMSGSRSV1.SONRS.STATUS;
-        t.equal(status.CODE, '0');
-        t.equal(status.SEVERITY, 'INFO');
+    const transactions = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
+    assert.equal(transactions.length, 29);
+    assert.equal(transactions[0].TRNAMT, "-45.54");
 
-        t.end();
-    });
+    const status = data.OFX.SIGNONMSGSRSV1.SONRS.STATUS;
+    assert.equal(status.CODE, '0');
+    assert.equal(status.SEVERITY, 'INFO');
 });
 
-test('parse XML', t => {
+test('parse XML', async () => {
     const file = fs.readFileSync(__dirname + '/data/example-xml.qfx', 'utf8');
-    ofx.parse(file).then(data => {
-        // headers
-        t.equal(data.header.OFXHEADER, '100');
-        t.equal(data.header.ENCODING, 'USASCII');
+    const data = await ofx.parse(file);
 
-        var transaction = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
-        t.same(transaction, {
-            TRNTYPE: 'INT',
-            DTPOSTED: '20161215000550',
-            TRNAMT: '0.84',
-            FITID: '21172131531687',
-            NAME: 'Interest Paid'
-        });
+    assert.equal(data.header.OFXHEADER, '100');
+    assert.equal(data.header.ENCODING, 'USASCII');
 
-        var status = data.OFX.SIGNONMSGSRSV1.SONRS.STATUS;
-        t.equal(status.CODE, '0');
-        t.equal(status.SEVERITY, 'INFO');
-
-        t.end();
+    const transaction = data.OFX.BANKMSGSRSV1.STMTTRNRS.STMTRS.BANKTRANLIST.STMTTRN;
+    assert.deepEqual(transaction, {
+        TRNTYPE: 'INT',
+        DTPOSTED: '20161215000550',
+        TRNAMT: '0.84',
+        FITID: '21172131531687',
+        NAME: 'Interest Paid'
     });
-})
+
+    const status = data.OFX.SIGNONMSGSRSV1.SONRS.STATUS;
+    assert.equal(status.CODE, '0');
+    assert.equal(status.SEVERITY, 'INFO');
+});

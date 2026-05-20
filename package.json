@@ -17,9 +17,7 @@
       "url": "https://webb.codes"
     }
   ],
-  "devDependencies": {
-    "tape": "^4.6.3"
-  },
+  "devDependencies": {},
   "dependencies": {},
   "main": "./ofx.js",
   "directories": {},
@@ -36,6 +34,6 @@
     "export"
   ],
   "scripts": {
-    "test": "tape test/*.js"
+    "test": "node --test test/*.js"
   }
 }
