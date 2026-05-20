@@ -1,7 +1,7 @@
 {
   "name": "ofx-js",
   "description": "Parse OFX files using pure JavaScript.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "homepage": "https://github.com/bradenmacdonald/ofx-js",
   "contributors": [
     {
