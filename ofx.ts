@@ -155,6 +155,8 @@ export interface LooselyTypedOFX {
 
 /**
  * Given a string of OFX data, parse it.
+ *
+ * For better TypeScript typing, use `parseStrict` instead.
  */
 export function parseSync(data: string): LooselyTypedOFX {
     // firstly, split into the header attributes and the footer sgml
@@ -184,6 +186,7 @@ export function parseSync(data: string): LooselyTypedOFX {
 /**
  * Given a string of OFX data, parse it asynchronously.
  * This function is only here for backward-compatibility purposes; it is not actually async.
+ * @deprecated Use `parseStrict` or `parseSync` instead.
  */
 export async function parse(data: string): Promise<LooselyTypedOFX> {
     return parseSync(data);
@@ -191,7 +194,7 @@ export async function parse(data: string): Promise<LooselyTypedOFX> {
 
 /**
  * Given a string of OFX data, parse it.
- * 
+ *
  * This parser is not any more strict than the normal `parseOFX`,
  * but the TypeScript types of the returned data are much more strict.
  */
