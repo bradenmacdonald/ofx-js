@@ -4,11 +4,29 @@ export type * as ofxTypes from './ofx-types.d.ts';
 function sgml2Xml(sgml: string): string {
     return sgml
         .replace(/>\s+</g, '><')    // remove whitespace inbetween tag close/open
-        .replace(/\s+</g, '<')      // remove whitespace before a close tag
+        .replace(/(?<!\s)\s+</g, '<') // remove whitespace before a close tag. (?<!\s) only starts a match at the beginning of a run of whitespace, so each run is scanned once.
         .replace(/>\s+/g, '>')      // remove whitespace after a close tag
         .replace(/<([A-Za-z0-9_]+)>([^<]+)<\/\1>/g, '<\$1>\$2') // remove closing tags if present. Example: <FOO>bar</FOO> becomes <FOO>bar for consistency, fixed in last step below.
-        .replace(/<([A-Z0-9_]*)+\.+([A-Z0-9_]*)>([^<]+)/g, '<\$1\$2>\$3')
+        .replace(/<([A-Z0-9_]*)\.+([A-Z0-9_]*)>([^<]+)/g, '<\$1\$2>\$3') // remove dots from tag names. Example: <INTU.BID>00015 becomes <INTUBID>00015
         .replace(/<(\w+?)>([^<]+)/g, '<\$1>\$2</\$1>'); // Add closing tag wherever they seem to be missing: <FOO>bar becomes <FOO>bar</FOO>
+}
+
+/**
+ * Remove <!-- comments -->. An unclosed comment and everything after it are kept,
+ * as the regex /<!--[\s\S]*?-->/g did, but without searching to the end of the
+ * text again from every later "<!--", which was quadratic.
+ */
+function stripComments(xml: string): string {
+    let result = '';
+    let from = 0;
+    let start: number;
+    while ((start = xml.indexOf('<!--', from)) !== -1) {
+        const end = xml.indexOf('-->', start + 4);
+        if (end === -1) break;
+        result += xml.slice(from, start);
+        from = end + 3;
+    }
+    return result + xml.slice(from);
 }
 
 interface AstNode {
@@ -25,17 +43,16 @@ interface AstNode {
 function parseXmlString(xml: string): AstNode | undefined {
     xml = xml.trim();
 
-    // strip comments
-    xml = xml.replace(/<!--[\s\S]*?-->/g, "");
+    xml = stripComments(xml);
 
     function document(): AstNode | undefined {
         // Ignore declaration like <?xml ... ?>
         const m = match(/^<\?xml\s*/);
         if (m) {
             while (!(eos() || is("?>"))) {
-                attribute();
+                if (!attribute()) break;
             }
-            match(/\?>\s*/);
+            match(/^\?>\s*/);
         }
 
         return tag();
@@ -62,7 +79,7 @@ function parseXmlString(xml: string): AstNode | undefined {
             return node;
         }
 
-        match(/\??>\s*/);
+        match(/^\??>\s*/);
 
         // content
         node.content = content();
@@ -88,7 +105,7 @@ function parseXmlString(xml: string): AstNode | undefined {
     }
 
     function attribute(): { name: string; value: string } | undefined {
-        const m = match(/([\w:-]+)\s*=\s*("[^"]*"|'[^']*'|\w+)\s*/);
+        const m = match(/^([\w:-]+)\s*=\s*("[^"]*"|'[^']*'|\w+)\s*/);
         if (!m) return undefined;
         return { name: m[1], value: entities(strip(m[2])) };
     }
@@ -101,6 +118,7 @@ function parseXmlString(xml: string): AstNode | undefined {
         return val.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
     }
 
+    /** Consume a match at the start of the remaining XML. Every regex passed here must be anchored with ^. */
     function match(re: RegExp): RegExpMatchArray | undefined {
         const m = xml.match(re);
         if (!m) return undefined;
